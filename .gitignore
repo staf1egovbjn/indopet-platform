@@ -1,0 +1,11 @@
+# Laravel
+/vendor
+/node_modules
+/public/storage
+.env
+
+# Vue
+frontend-new/node_modules
+backend/node_modules
+frontend-new/dist
+backend/public/hot
