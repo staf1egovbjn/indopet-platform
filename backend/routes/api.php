@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,8 +20,30 @@ use App\Http\Controllers\Api\CartController;
 |
 */
 
+// Authentication routes
+Route::prefix('v1/auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me', [AuthController::class, 'me']);
+    });
+});
+
 // Public routes
 Route::prefix('v1')->group(function () {
+    // Test route
+    Route::get('test', function () {
+        return response()->json([
+            'success' => true,
+            'message' => 'API is working!',
+            'timestamp' => now(),
+            'products_count' => \App\Models\Product::count(),
+            'articles_count' => \App\Models\Article::count(),
+        ]);
+    });
+    
     // Categories
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
     
@@ -56,7 +79,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 });
 
 // Admin routes (require admin role)
-Route::middleware(['auth:sanctum', 'admin'])->prefix('v1/admin')->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
     // Categories management
     Route::apiResource('categories', CategoryController::class)->except(['show']);
     
