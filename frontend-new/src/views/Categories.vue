@@ -67,7 +67,7 @@ const getCategoryIcon = (categoryName) => {
 };
 
 const goToCategory = (category) => {
-    router.push(`/products?category=${category.id}`);
+    router.push(`/shop?category=${category.id}`);
 };
 
 const loadCategories = async () => {

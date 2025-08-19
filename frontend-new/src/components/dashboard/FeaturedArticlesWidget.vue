@@ -2,7 +2,7 @@
     <div class="card">
         <div class="flex items-center justify-between mb-6">
             <h5 class="text-xl font-semibold text-surface-900 dark:text-surface-0">Latest Articles</h5>
-            <router-link to="/articles" class="text-primary-500 hover:text-primary-600 font-medium"> View All Articles </router-link>
+            <router-link to="/shop/articles" class="text-primary-500 hover:text-primary-600 font-medium"> View All Articles </router-link>
         </div>
         <div class="space-y-4" v-if="!loading && articles.length > 0">
             <div v-for="article in articles" :key="article.id" class="flex gap-4 p-4 border border-surface-200 dark:border-surface-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer" @click="goToArticle(article)">
@@ -49,9 +49,7 @@ const formatDate = (dateString) => {
 };
 
 const goToArticle = (article) => {
-    // TODO: Navigate to article detail
-    console.log('Navigate to article:', article);
-    // router.push(`/articles/${article.id}`);
+    router.push(`/shop/articles/${article.id}`);
 };
 
 const loadFeaturedArticles = async () => {
@@ -76,6 +74,7 @@ onMounted(() => {
 .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -83,6 +82,7 @@ onMounted(() => {
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

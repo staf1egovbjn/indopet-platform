@@ -23,10 +23,15 @@ class ProductService {
 
     async getProductById(id) {
         try {
+            console.log(`Fetching product with ID: ${id}`);
+            console.log(`API URL: /products/${id}`);
             const response = await apiClient.get(`/products/${id}`);
+            console.log('API Response:', response);
+            console.log('API Response Data:', response.data);
             return response.data;
         } catch (error) {
             console.error('Error fetching product:', error);
+            console.error('Error details:', error.response);
             throw error;
         }
     }

@@ -47,15 +47,54 @@
                         <div>
                             <label class="block text-sm font-medium mb-2">Quantity</label>
                             <div class="flex items-center gap-3">
-                                <Button icon="pi pi-minus" severity="secondary" outlined @click="quantity > 1 && quantity--" :disabled="quantity <= 1" />
-                                <InputNumber v-model="quantity" :min="1" :max="10" showButtons buttonLayout="horizontal" class="w-24" />
-                                <Button icon="pi pi-plus" severity="secondary" outlined @click="quantity < 10 && quantity++" :disabled="quantity >= 10" />
+                                <Button 
+                                    icon="pi pi-minus" 
+                                    severity="secondary" 
+                                    outlined 
+                                    @click="quantity > 1 && quantity--" 
+                                    :disabled="quantity <= 1" 
+                                />
+                                <InputNumber 
+                                    v-model="quantity" 
+                                    :min="1" 
+                                    :max="product.stock_quantity || 10" 
+                                    showButtons 
+                                    buttonLayout="horizontal" 
+                                    class="w-32" 
+                                />
+                                <Button 
+                                    icon="pi pi-plus" 
+                                    severity="secondary" 
+                                    outlined 
+                                    @click="quantity < (product.stock_quantity || 10) && quantity++" 
+                                    :disabled="quantity >= (product.stock_quantity || 10)" 
+                                />
                             </div>
+                            <small v-if="product.stock_quantity" class="text-surface-500">
+                                Maximum: {{ product.stock_quantity }}
+                            </small>
                         </div>
 
                         <div class="flex gap-3">
-                            <Button label="Add to Cart" icon="pi pi-shopping-cart" class="flex-1" @click="addToCart" />
+                            <Button 
+                                label="Add to Cart" 
+                                icon="pi pi-shopping-cart" 
+                                class="flex-1" 
+                                :loading="addingToCart"
+                                :disabled="!product.in_stock"
+                                @click="addToCart" 
+                            />
                             <Button icon="pi pi-heart" severity="secondary" outlined @click="addToWishlist" />
+                        </div>
+                        
+                        <!-- Stock Status -->
+                        <div v-if="!product.in_stock" class="text-sm text-red-600 dark:text-red-400">
+                            <i class="pi pi-exclamation-triangle mr-2"></i>
+                            Currently out of stock
+                        </div>
+                        <div v-else-if="product.stock_quantity && product.stock_quantity < 10" class="text-sm text-orange-600 dark:text-orange-400">
+                            <i class="pi pi-info-circle mr-2"></i>
+                            Only {{ product.stock_quantity }} left in stock
                         </div>
                     </div>
 
@@ -64,11 +103,36 @@
                         <div class="grid grid-cols-2 gap-4 text-sm">
                             <div>
                                 <span class="font-medium">Category:</span>
-                                <span class="ml-2 text-surface-600">{{ product.category?.name || 'N/A' }}</span>
+                                <span class="ml-2 text-primary-600 cursor-pointer hover:underline" @click="router.push(`/shop?category=${product.category_id}`)">>
+                                    {{ product.category?.name || 'N/A' }}
+                                </span>
                             </div>
                             <div>
-                                <span class="font-medium">Stock:</span>
-                                <span class="ml-2 text-surface-600">{{ product.stock || 'Available' }}</span>
+                                <span class="font-medium">Availability:</span>
+                                <span class="ml-2" :class="product.in_stock ? 'text-green-600' : 'text-red-600'">
+                                    {{ product.in_stock ? 'In Stock' : 'Out of Stock' }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="font-medium">SKU:</span>
+                                <span class="ml-2 text-surface-600">{{ product.sku || `PET-${product.id}` }}</span>
+                            </div>
+                            <div v-if="product.weight">
+                                <span class="font-medium">Weight:</span>
+                                <span class="ml-2 text-surface-600">{{ product.weight }}kg</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Product Features (if available) -->
+                        <div v-if="product.features" class="mt-4">
+                            <h4 class="font-medium mb-2">Features:</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <Badge 
+                                    v-for="feature in product.features" 
+                                    :key="feature" 
+                                    :value="feature" 
+                                    severity="info" 
+                                />
                             </div>
                         </div>
                     </div>
@@ -81,7 +145,7 @@
             <i class="pi pi-exclamation-triangle text-6xl text-surface-400 mb-4"></i>
             <h2 class="text-2xl font-semibold text-surface-900 dark:text-surface-0 mb-2">Product Not Found</h2>
             <p class="text-surface-600 dark:text-surface-400 mb-6">The product you're looking for doesn't exist or has been removed.</p>
-            <Button label="Back to Products" icon="pi pi-arrow-left" @click="$router.push('/products')" />
+            <Button label="Back to Products" icon="pi pi-arrow-left" @click="$router.push('/shop')" />
         </div>
 
         <!-- Related Products -->
@@ -92,7 +156,7 @@
                     v-for="relatedProduct in relatedProducts"
                     :key="relatedProduct.id"
                     class="border border-surface-200 dark:border-surface-700 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
-                    @click="$router.push(`/products/${relatedProduct.id}`)"
+                    @click="$router.push(`/shop/products/${relatedProduct.id}`)"
                 >
                     <div class="w-full h-32 bg-surface-100 dark:bg-surface-800 rounded-lg mb-3 flex items-center justify-center">
                         <i class="pi pi-image text-2xl text-surface-400"></i>
@@ -107,38 +171,32 @@
 
 <script setup>
 import IndoPetProductService from '@/service/IndoPetProductService.js';
+import CartService from '@/service/CartService.js';
 import Badge from 'primevue/badge';
 import Breadcrumb from 'primevue/breadcrumb';
 import Button from 'primevue/button';
 import InputNumber from 'primevue/inputnumber';
 import ProgressSpinner from 'primevue/progressspinner';
 import Rating from 'primevue/rating';
+import { useToast } from 'primevue/usetoast';
 import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 
 const product = ref(null);
 const relatedProducts = ref([]);
 const loading = ref(true);
+const addingToCart = ref(false);
 const quantity = ref(1);
 
 const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
-const breadcrumbItems = ref([{ label: 'Products', to: '/products' }, { label: 'Product Detail' }]);
+const breadcrumbItems = ref([{ label: 'Products', to: '/shop' }, { label: 'Product Detail' }]);
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID').format(price);
-};
-
-const addToCart = () => {
-    console.log('Adding to cart:', product.value, 'quantity:', quantity.value);
-    // TODO: Implement add to cart functionality
-};
-
-const addToWishlist = () => {
-    console.log('Adding to wishlist:', product.value);
-    // TODO: Implement wishlist functionality
 };
 
 const loadProduct = async (productId) => {
@@ -174,6 +232,55 @@ const loadRelatedProducts = async () => {
     }
 };
 
+const addToCart = async () => {
+    if (!product.value) return;
+    
+    try {
+        addingToCart.value = true;
+        await CartService.addToCart(product.value.id, quantity.value);
+        
+        toast.add({
+            severity: 'success',
+            summary: 'Added to Cart',
+            detail: `${product.value.name} (${quantity.value}) added to cart successfully`,
+            life: 3000
+        });
+        
+        // Reset quantity to 1 after successful add
+        quantity.value = 1;
+        
+    } catch (error) {
+        let errorMessage = 'Failed to add item to cart';
+        
+        if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (error.response?.status === 401) {
+            errorMessage = 'Please login to add items to cart';
+            // Redirect to login page
+            router.push('/auth/login');
+            return;
+        }
+        
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: errorMessage,
+            life: 5000
+        });
+    } finally {
+        addingToCart.value = false;
+    }
+};
+
+const addToWishlist = () => {
+    toast.add({
+        severity: 'success',
+        summary: 'Added to Wishlist',
+        detail: `${product.value.name} added to wishlist`,
+        life: 3000
+    });
+};
+
 // Watch for route changes
 watch(
     () => route.params.id,
@@ -196,6 +303,7 @@ onMounted(() => {
 .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

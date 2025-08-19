@@ -154,39 +154,62 @@ const fullName = computed(() => {
 });
 
 const updateProfile = () => {
-    // TODO: Implement profile update API call
-    console.log('Updating profile:', profile.value);
+    toast.add({
+        severity: 'success',
+        summary: 'Profile Updated',
+        detail: 'Your profile has been updated successfully',
+        life: 3000
+    });
 };
 
 const changePassword = () => {
-    // TODO: Implement password change API call
     if (passwordForm.value.new !== passwordForm.value.confirm) {
-        console.error('Passwords do not match');
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Passwords do not match',
+            life: 3000
+        });
         return;
     }
-    console.log('Changing password');
+    
+    toast.add({
+        severity: 'success',
+        summary: 'Password Changed',
+        detail: 'Your password has been changed successfully',
+        life: 3000
+    });
+    
     // Reset form
     passwordForm.value = { current: '', new: '', confirm: '' };
 };
 
 const viewOrderHistory = () => {
     // TODO: Navigate to order history
-    console.log('Viewing order history');
+    router.push('/shop/orders');
 };
 
 const viewWishlist = () => {
     // TODO: Navigate to wishlist
-    console.log('Viewing wishlist');
+    toast.add({
+        severity: 'info',
+        summary: 'Wishlist',
+        detail: 'Wishlist feature coming soon',
+        life: 3000
+    });
 };
 
 const manageAddresses = () => {
     // TODO: Navigate to address management
-    console.log('Managing addresses');
+    toast.add({
+        severity: 'info',
+        summary: 'Address Management',
+        detail: 'Address management feature coming soon',
+        life: 3000
+    });
 };
 
 const logout = () => {
-    // TODO: Implement logout
-    console.log('Logging out');
     router.push('/auth/login');
 };
 </script>

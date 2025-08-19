@@ -27,8 +27,9 @@
                 <ProgressSpinner />
             </div>
 
-            <div v-else-if="filteredArticles.length > 0" class="space-y-6">
-                <div v-for="article in filteredArticles" :key="article.id" class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer" @click="goToArticle(article)">
+            <div v-else>
+                <div v-if="filteredArticles.length > 0" class="space-y-6">
+                    <div v-for="(article, index) in filteredArticles" :key="article.id || index" class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer" @click="goToArticle(article)">
                     <div class="flex gap-6">
                         <div class="w-48 h-32 bg-surface-100 dark:bg-surface-800 rounded-lg flex-shrink-0 flex items-center justify-center">
                             <i class="pi pi-file-text text-4xl text-surface-400"></i>
@@ -65,13 +66,14 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
 
-            <!-- Empty State -->
-            <div v-else class="text-center py-8">
-                <i class="pi pi-file-text text-6xl text-surface-400 mb-4"></i>
-                <h3 class="text-xl font-medium text-surface-900 dark:text-surface-0 mb-2">No Articles Found</h3>
-                <p class="text-surface-600 dark:text-surface-400">Try adjusting your search criteria</p>
+                <!-- Empty State -->
+                <div v-if="filteredArticles.length === 0" class="text-center py-8">
+                    <i class="pi pi-file-text text-6xl text-surface-400 mb-4"></i>
+                    <h3 class="text-xl font-medium text-surface-900 dark:text-surface-0 mb-2">No Articles Found</h3>
+                    <p class="text-surface-600 dark:text-surface-400">Try adjusting your search criteria</p>
+                </div>
             </div>
         </div>
 
@@ -135,7 +137,7 @@ const formatDate = (dateString) => {
 };
 
 const goToArticle = (article) => {
-    router.push(`/articles/${article.id}`);
+    router.push(`/shop/articles/${article.id}`);
 };
 
 const handleSearch = () => {
@@ -187,7 +189,8 @@ const loadArticles = async () => {
     try {
         loading.value = true;
         const response = await IndoPetArticleService.getArticles();
-        articles.value = response.data || [];
+        // Use response.data.data for paginated results
+        articles.value = response.data?.data || [];
     } catch (error) {
         console.error('Failed to load articles:', error);
         articles.value = [];
@@ -205,6 +208,7 @@ onMounted(() => {
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -212,6 +216,7 @@ onMounted(() => {
 .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

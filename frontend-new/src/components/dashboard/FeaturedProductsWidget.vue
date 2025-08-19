@@ -2,7 +2,7 @@
     <div class="card">
         <div class="flex items-center justify-between mb-6">
             <h5 class="text-xl font-semibold text-surface-900 dark:text-surface-0">Featured Products</h5>
-            <router-link to="/products" class="text-primary-500 hover:text-primary-600 font-medium"> View All Products </router-link>
+            <router-link to="/shop" class="text-primary-500 hover:text-primary-600 font-medium"> View All Products </router-link>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" v-if="!loading && products.length > 0">
             <div v-for="product in products" :key="product.id" class="border border-surface-200 dark:border-surface-700 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -43,8 +43,7 @@ const formatPrice = (price) => {
 };
 
 const addToCart = (product) => {
-    // TODO: Implement add to cart functionality
-    console.log('Adding to cart:', product);
+    // Cart functionality to be implemented later
 };
 
 const loadFeaturedProducts = async () => {
@@ -69,6 +68,7 @@ onMounted(() => {
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

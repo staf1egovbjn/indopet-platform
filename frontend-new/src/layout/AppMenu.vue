@@ -10,14 +10,14 @@ const model = ref([
     {
         label: 'Shop',
         items: [
-            { label: 'Products', icon: 'pi pi-fw pi-shopping-bag', to: '/products' },
+            { label: 'Products', icon: 'pi pi-fw pi-shopping-bag', to: '/shop' },
             { label: 'Categories', icon: 'pi pi-fw pi-tag', to: '/categories' },
             { label: 'Cart', icon: 'pi pi-fw pi-shopping-cart', to: '/cart' }
         ]
     },
     {
         label: 'Content',
-        items: [{ label: 'Articles', icon: 'pi pi-fw pi-file-text', to: '/articles' }]
+        items: [{ label: 'Articles', icon: 'pi pi-fw pi-file-text', to: '/shop/articles' }]
     },
     {
         label: 'User',

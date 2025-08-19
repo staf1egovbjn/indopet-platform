@@ -32,10 +32,11 @@
             <div v-if="loading" class="flex justify-center items-center py-8">
                 <ProgressSpinner />
             </div>
-
-            <!-- Grid View -->
-            <div v-else-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <div v-for="product in filteredProducts" :key="product.id" class="border border-surface-200 dark:border-surface-700 rounded-lg p-4 hover:shadow-lg transition-all cursor-pointer" @click="goToProduct(product)">
+            
+            <div v-else>
+                <!-- Grid View -->
+                <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div v-for="(product, index) in filteredProducts" :key="product.id || index" class="border border-surface-200 dark:border-surface-700 rounded-lg p-4 hover:shadow-lg transition-all cursor-pointer" @click="goToProduct(product)">
                     <div class="mb-4">
                         <div class="w-full h-48 bg-surface-100 dark:bg-surface-800 rounded-lg mb-3 flex items-center justify-center">
                             <i class="pi pi-image text-4xl text-surface-400"></i>
@@ -54,9 +55,9 @@
                 </div>
             </div>
 
-            <!-- List View -->
-            <div v-else class="space-y-4">
-                <div v-for="product in filteredProducts" :key="product.id" class="flex gap-4 p-4 border border-surface-200 dark:border-surface-700 rounded-lg hover:shadow-md transition-all cursor-pointer" @click="goToProduct(product)">
+                <!-- List View -->
+                <div v-else-if="viewMode === 'list'" class="space-y-4">
+                    <div v-for="(product, index) in filteredProducts" :key="product.id || index" class="flex gap-4 p-4 border border-surface-200 dark:border-surface-700 rounded-lg hover:shadow-md transition-all cursor-pointer" @click="goToProduct(product)">
                     <div class="w-24 h-24 bg-surface-100 dark:bg-surface-800 rounded-lg flex-shrink-0 flex items-center justify-center">
                         <i class="pi pi-image text-2xl text-surface-400"></i>
                     </div>
@@ -80,13 +81,14 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
 
-            <!-- Empty State -->
-            <div v-if="!loading && filteredProducts.length === 0" class="text-center py-8">
-                <i class="pi pi-shopping-bag text-6xl text-surface-400 mb-4"></i>
-                <h3 class="text-xl font-medium text-surface-900 dark:text-surface-0 mb-2">No Products Found</h3>
-                <p class="text-surface-600 dark:text-surface-400">Try adjusting your search or filter criteria</p>
+                <!-- Empty State -->
+                <div v-if="filteredProducts.length === 0" class="text-center py-8">
+                    <i class="pi pi-shopping-bag text-6xl text-surface-400 mb-4"></i>
+                    <h3 class="text-xl font-medium text-surface-900 dark:text-surface-0 mb-2">No Products Found</h3>
+                    <p class="text-surface-600 dark:text-surface-400">Try adjusting your search or filter criteria</p>
+                </div>
             </div>
         </div>
 
@@ -116,6 +118,7 @@
 <script setup>
 import IndoPetCategoryService from '@/service/IndoPetCategoryService.js';
 import IndoPetProductService from '@/service/IndoPetProductService.js';
+import CartService from '@/service/CartService.js';
 import Badge from 'primevue/badge';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
@@ -126,10 +129,12 @@ import InputIcon from 'primevue/inputicon';
 import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import ProgressSpinner from 'primevue/progressspinner';
+import { useToast } from 'primevue/usetoast';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const toast = useToast();
 const products = ref([]);
 const categories = ref([]);
 const loading = ref(true);
@@ -151,12 +156,16 @@ const toggleViewMode = () => {
 };
 
 const goToProduct = (product) => {
-    router.push(`/products/${product.id}`);
+    router.push(`/shop/products/${product.id}`);
 };
 
 const addToCart = (product) => {
-    console.log('Adding to cart:', product);
-    // TODO: Implement add to cart functionality
+    toast.add({
+        severity: 'success',
+        summary: 'Added to Cart',
+        detail: `${product.name} added to cart`,
+        life: 3000
+    });
 };
 
 const handleSearch = () => {
@@ -211,7 +220,8 @@ const loadProducts = async () => {
     try {
         loading.value = true;
         const response = await IndoPetProductService.getProducts();
-        products.value = response.data || [];
+        // Use response.data.data for paginated results
+        products.value = response.data?.data || [];
     } catch (error) {
         console.error('Failed to load products:', error);
         products.value = [];
@@ -240,6 +250,7 @@ onMounted(() => {
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

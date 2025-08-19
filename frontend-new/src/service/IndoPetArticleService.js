@@ -23,10 +23,15 @@ class ArticleService {
 
     async getArticleById(id) {
         try {
+            console.log(`Fetching article with ID: ${id}`);
+            console.log(`API URL: /articles/${id}`);
             const response = await apiClient.get(`/articles/${id}`);
+            console.log('API Response:', response);
+            console.log('API Response Data:', response.data);
             return response.data;
         } catch (error) {
             console.error('Error fetching article:', error);
+            console.error('Error details:', error.response);
             throw error;
         }
     }

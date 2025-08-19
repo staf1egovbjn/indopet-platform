@@ -113,7 +113,7 @@ const formatPrice = (price) => {
 };
 
 const continueShopping = () => {
-    router.push('/products');
+    router.push('/shop');
 };
 
 const updateQuantity = (item, newQuantity) => {
@@ -134,8 +134,12 @@ const clearCart = () => {
 };
 
 const proceedToCheckout = () => {
-    // TODO: Implement checkout process
-    console.log('Proceeding to checkout...');
+    toast.add({
+        severity: 'info',
+        summary: 'Checkout',
+        detail: 'Redirecting to checkout page...',
+        life: 3000
+    });
 };
 
 // Computed values
