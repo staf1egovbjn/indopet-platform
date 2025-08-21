@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base API configuration
-const API_BASE_URL = 'indopet-platform-production.up.railway.app';
+const API_BASE_URL = 'https://indopet-platform-production.up.railway.app';
 
 // Create axios instance
 const apiClient = axios.create({
