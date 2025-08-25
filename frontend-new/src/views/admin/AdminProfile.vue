@@ -1,56 +1,63 @@
-&lt;template&gt;
-    &lt;div class=&quot;card&quot;&gt;
-        &lt;h1 class=&quot;text-3xl font-bold mb-6&quot;&gt;Profile&lt;/h1&gt;
+<template>
+    <div class="card">
+        <h1 class="text-3xl font-bold mb-6">Profile</h1>
         
-        &lt;div class=&quot;grid&quot;&gt;
-            &lt;div class=&quot;col-12 md:col-6&quot;&gt;
-                &lt;div class=&quot;card p-4&quot;&gt;
-                    &lt;div class=&quot;mb-4 text-center&quot;&gt;
-                        &lt;div class=&quot;w-24 h-24 rounded-full bg-primary-100 flex items-center justify-center mx-auto mb-3&quot;&gt;
-                            &lt;i class=&quot;pi pi-user text-4xl text-primary-600&quot;&gt;&lt;/i&gt;
-                        &lt;/div&gt;
-                        &lt;h2 class=&quot;text-xl font-semibold&quot;&gt;{{ user.name }}&lt;/h2&gt;
-                        &lt;p class=&quot;text-surface-600&quot;&gt;{{ user.email }}&lt;/p&gt;
-                    &lt;/div&gt;
+        <div class="grid">
+            <div class="col-12 md:col-6">
+                <div class="card p-4">
+                    <div class="mb-4 text-center">
+                        <div class="w-24 h-24 rounded-full bg-primary-100 flex items-center justify-center mx-auto mb-3">
+                            <i class="pi pi-user text-4xl text-primary-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold">{{ user.name }}</h2>
+                        <p class="text-surface-600">{{ user.email }}</p>
+                    </div>
 
-                    &lt;form @submit.prevent=&quot;updateProfile&quot; class=&quot;mt-6&quot;&gt;
-                        &lt;div class=&quot;field mb-4&quot;&gt;
-                            &lt;label for=&quot;name&quot; class=&quot;block font-medium mb-2&quot;&gt;Name&lt;/label&gt;
-                            &lt;InputText id=&quot;name&quot; v-model=&quot;form.name&quot; class=&quot;w-full&quot; :class=&quot;{ 'p-invalid': v$.form.name.$error }&quot; />
-                            &lt;small v-if=&quot;v$.form.name.$error&quot; class=&quot;p-error&quot;&gt;Name is required&lt;/small&gt;
-                        &lt;/div&gt;
+                    <form @submit.prevent="updateProfile" class="mt-6">
+                        <div class="field mb-4">
+                            <label for="name" class="block font-medium mb-2">Name</label>
+                            <InputText id="name" v-model="form.name" class="w-full" :class="{ 'p-invalid': v$.form.name.$error }" />
+                            <small v-if="v$.form.name.$error" class="p-error">Name is required</small>
+                        </div>
 
-                        &lt;div class=&quot;field mb-4&quot;&gt;
-                            &lt;label for=&quot;email&quot; class=&quot;block font-medium mb-2&quot;&gt;Email&lt;/label&gt;
-                            &lt;InputText id=&quot;email&quot; v-model=&quot;form.email&quot; type=&quot;email&quot; class=&quot;w-full&quot; :class=&quot;{ 'p-invalid': v$.form.email.$error }&quot; />
-                            &lt;small v-if=&quot;v$.form.email.$error&quot; class=&quot;p-error&quot;&gt;Valid email is required&lt;/small&gt;
-                        &lt;/div&gt;
+                        <div class="field mb-4">
+                            <label for="email" class="block font-medium mb-2">Email</label>
+                            <InputText id="email" v-model="form.email" type="email" class="w-full" :class="{ 'p-invalid': v$.form.email.$error }" />
+                            <small v-if="v$.form.email.$error" class="p-error">Valid email is required</small>
+                        </div>
 
-                        &lt;div class=&quot;field mb-4&quot;&gt;
-                            &lt;label for=&quot;password&quot; class=&quot;block font-medium mb-2&quot;&gt;New Password (optional)&lt;/label&gt;
-                            &lt;Password id=&quot;password&quot; v-model=&quot;form.password&quot; :feedback=&quot;false&quot; toggleMask class=&quot;w-full&quot; />
-                        &lt;/div&gt;
+                        <div class="field mb-4">
+                            <label for="password" class="block font-medium mb-2">New Password (optional)</label>
+                            <Password id="password" v-model="form.password" :feedback="false" toggleMask class="w-full" />
+                        </div>
 
-                        &lt;Button type=&quot;submit&quot; label=&quot;Update Profile&quot; class=&quot;w-full&quot; :loading=&quot;loading&quot; /&gt;
-                    &lt;/form&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
+                        <Button type="submit" label="Update Profile" class="w-full" :loading="loading" />
+                    </form>
+                </div>
+            </div>
+        </div>
 
-        &lt;Toast /&gt;
-    &lt;/div&gt;
-&lt;/template&gt;
+        <Toast />
+    </div>
+</template>
 
-&lt;script setup&gt;
+<script setup>
 import { ref, onMounted } from 'vue';
 import { useVuelidate } from '@vuelidate/core';
 import { required, email } from '@vuelidate/validators';
 import { useToast } from 'primevue/usetoast';
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Password from 'primevue/password';
+import Toast from 'primevue/toast';
 import { AuthService } from '@/service/AuthService';
 
 const toast = useToast();
 const loading = ref(false);
-const user = ref({});
+const user = ref({
+    name: '',
+    email: ''
+});
 
 const form = ref({
     name: '',
@@ -68,10 +75,19 @@ const rules = {
 const v$ = useVuelidate(rules, { form });
 
 onMounted(async () => {
-    const userData = await AuthService.getCurrentUser();
-    user.value = userData;
-    form.value.name = userData.name;
-    form.value.email = userData.email;
+    try {
+        const userData = await AuthService.getCurrentUser();
+        user.value = userData;
+        form.value.name = userData.name;
+        form.value.email = userData.email;
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load profile data',
+            life: 3000
+        });
+    }
 });
 
 const updateProfile = async () => {
@@ -108,4 +124,4 @@ const updateProfile = async () => {
         loading.value = false;
     }
 };
-&lt;/script&gt;
+</script>
