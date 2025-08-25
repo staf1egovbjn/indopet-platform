@@ -31,6 +31,11 @@ Route::prefix('v1/auth')->group(function () {
     });
 });
 
+// routes/api.php
+Route::options('{any}', function () {
+    return response()->json([], 200);
+})->where('any', '.*');
+
 // Public routes
 Route::prefix('v1')->group(function () {
     // Test route
