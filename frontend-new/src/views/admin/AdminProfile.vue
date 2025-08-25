@@ -50,7 +50,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Toast from 'primevue/toast';
-import { AuthService } from '@/service/AuthService';
+import AuthService from '@/service/AuthService';
 
 const toast = useToast();
 const loading = ref(false);
