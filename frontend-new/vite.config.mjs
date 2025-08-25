@@ -8,7 +8,12 @@ import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig({
     optimizeDeps: {
-        noDiscovery: true
+        include: ['@vuelidate/core', '@vuelidate/validators']
+    },
+    build: {
+        commonjsOptions: {
+            include: [/@vuelidate\/*/]
+        }
     },
     plugins: [
         vue(),
