@@ -85,70 +85,176 @@
 <script setup>
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
-import { computed, ref } from 'vue';
+import Toast from 'primevue/toast';
+import ProgressSpinner from 'primevue/progressspinner';
+import ConfirmDialog from 'primevue/confirmdialog';
+import { useConfirm } from 'primevue/useconfirm';
+import { useToast } from 'primevue/usetoast';
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import CartService from '@/service/CartService';
 
 const router = useRouter();
+const toast = useToast();
+const confirm = useConfirm();
+const loading = ref(false);
+const cartItems = ref([]);
 
-// Mock cart data - in real app this would come from a store/service
-const cartItems = ref([
-    {
-        id: 1,
-        name: 'Royal Canin Adult',
-        description: 'Premium dog food for adult dogs',
-        price: 250000,
-        quantity: 2
-    },
-    {
-        id: 2,
-        name: 'Cat Vitamin Supplement',
-        description: 'Essential vitamins for healthy cats',
-        price: 75000,
-        quantity: 1
+// Load cart items when component mounts
+onMounted(async () => {
+    await loadCartItems();
+});
+
+// Load cart items from the server
+const loadCartItems = async () => {
+    try {
+        loading.value = true;
+        const response = await CartService.getCartItems();
+        cartItems.value = response.data;
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load cart items',
+            life: 3000
+        });
+    } finally {
+        loading.value = false;
     }
-]);
+};
 
+// Format price to Indonesian Rupiah
 const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID').format(price);
 };
 
+// Update item quantity
+const updateQuantity = async (item, newQuantity) => {
+    if (newQuantity < 1) return;
+    
+    try {
+        loading.value = true;
+        await CartService.updateCartItem(item.id, newQuantity);
+        await loadCartItems(); // Reload cart to get updated data
+        
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Cart updated successfully',
+            life: 3000
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to update cart item',
+            life: 3000
+        });
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Confirm remove item
+const confirmRemoveItem = (item) => {
+    confirm.require({
+        message: `Are you sure you want to remove ${item.name} from your cart?`,
+        header: 'Confirm Removal',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => removeItem(item)
+    });
+};
+
+// Remove item from cart
+const removeItem = async (item) => {
+    try {
+        loading.value = true;
+        await CartService.removeFromCart(item.id);
+        await loadCartItems();
+        
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Item removed from cart',
+            life: 3000
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to remove item',
+            life: 3000
+        });
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Confirm clear cart
+const confirmClearCart = () => {
+    confirm.require({
+        message: 'Are you sure you want to clear your entire cart?',
+        header: 'Confirm Clear Cart',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => clearCart()
+    });
+};
+
+// Clear entire cart
+const clearCart = async () => {
+    try {
+        loading.value = true;
+        await CartService.clearCart();
+        cartItems.value = [];
+        
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Cart cleared successfully',
+            life: 3000
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to clear cart',
+            life: 3000
+        });
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Navigate to shop
 const continueShopping = () => {
     router.push('/shop');
 };
 
-const updateQuantity = (item, newQuantity) => {
-    if (newQuantity > 0) {
-        item.quantity = newQuantity;
+// Proceed to checkout
+const proceedToCheckout = async () => {
+    try {
+        loading.value = true;
+        const response = await CartService.createOrder();
+        router.push(`/shop/checkout/${response.data.orderId}`);
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to proceed to checkout',
+            life: 3000
+        });
+    } finally {
+        loading.value = false;
     }
 };
 
-const removeItem = (itemToRemove) => {
-    const index = cartItems.value.findIndex((item) => item.id === itemToRemove.id);
-    if (index > -1) {
-        cartItems.value.splice(index, 1);
-    }
-};
-
-const clearCart = () => {
-    cartItems.value = [];
-};
-
-const proceedToCheckout = () => {
-    toast.add({
-        severity: 'info',
-        summary: 'Checkout',
-        detail: 'Redirecting to checkout page...',
-        life: 3000
-    });
-};
-
-// Computed values
+// Computed properties
 const totalItems = computed(() => {
     return cartItems.value.reduce((total, item) => total + item.quantity, 0);
 });
 
 const subtotal = computed(() => {
-    return cartItems.value.reduce((total, item) => total + item.price * item.quantity, 0);
+    return cartItems.value.reduce((total, item) => total + (item.price * item.quantity), 0);
 });
 
 const shippingCost = computed(() => {

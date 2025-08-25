@@ -59,6 +59,45 @@ class CartService {
             const response = await axios.delete(`${this.baseURL}/remove/${cartItemId}`);
             return response.data;
         } catch (error) {
+            console.error('Error removing cart item:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Clear all items from cart
+     */
+    async clearCart() {
+        try {
+            const response = await axios.delete(this.baseURL);
+            return response.data;
+        } catch (error) {
+            console.error('Error clearing cart:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create order from cart
+     */
+    async createOrder() {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/orders/create`);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating order:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Remove item from cart
+     */
+    async removeFromCart(cartItemId) {
+        try {
+            const response = await axios.delete(`${this.baseURL}/remove/${cartItemId}`);
+            return response.data;
+        } catch (error) {
             console.error('Error removing from cart:', error);
             throw error;
         }

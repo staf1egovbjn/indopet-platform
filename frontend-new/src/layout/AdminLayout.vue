@@ -1,10 +1,10 @@
 <template>
-    <div class="layout-wrapper" :class="{ 'layout-sidebar-active': isSidebarVisible }">
-        <div class="layout-sidebar" :class="{ 'hidden': !isSidebarVisible }">
+    <div class="layout-wrapper" :class="{ 'layout-sidebar-collapsed': !isSidebarVisible }">
+        <div class="layout-sidebar">
             <div class="sidebar-header">
                 <router-link to="/admin" class="layout-topbar-logo">
                     <i class="pi pi-heart text-xl mr-2"></i>
-                    <span>IndoPet Admin</span>
+                    <span v-show="isSidebarVisible">IndoPet Admin</span>
                 </router-link>
             </div>
             
@@ -13,37 +13,43 @@
                     <li class="menu-item">
                         <router-link to="/admin" class="menu-link">
                             <i class="pi pi-home"></i>
-                            <span>Dashboard</span>
+                            <span v-show="isSidebarVisible">Dashboard</span>
                         </router-link>
                     </li>
                     <li class="menu-item">
                         <router-link to="/admin/products" class="menu-link">
                             <i class="pi pi-shopping-bag"></i>
-                            <span>Products</span>
+                            <span v-show="isSidebarVisible">Products</span>
                         </router-link>
                     </li>
                     <li class="menu-item">
                         <router-link to="/admin/categories" class="menu-link">
                             <i class="pi pi-tags"></i>
-                            <span>Categories</span>
+                            <span v-show="isSidebarVisible">Categories</span>
                         </router-link>
                     </li>
                     <li class="menu-item">
                         <router-link to="/admin/articles" class="menu-link">
                             <i class="pi pi-file-text"></i>
-                            <span>Articles</span>
+                            <span v-show="isSidebarVisible">Articles</span>
                         </router-link>
                     </li>
                     <li class="menu-item">
                         <router-link to="/admin/orders" class="menu-link">
                             <i class="pi pi-shopping-cart"></i>
-                            <span>Orders</span>
+                            <span v-show="isSidebarVisible">Orders</span>
+                        </router-link>
+                    </li>
+                    <li class="menu-item">
+                        <router-link to="/admin/profile" class="menu-link">
+                            <i class="pi pi-user"></i>
+                            <span v-show="isSidebarVisible">Profile</span>
                         </router-link>
                     </li>
                     <li class="menu-item">
                         <a @click="logout" class="menu-link cursor-pointer">
                             <i class="pi pi-sign-out"></i>
-                            <span>Logout</span>
+                            <span v-show="isSidebarVisible">Logout</span>
                         </a>
                     </li>
                 </ul>
@@ -137,8 +143,35 @@ const logout = async () => {
     border-right: 1px solid var(--surface-border);
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s, width 0.3s;
+    transition: all 0.3s ease;
     z-index: 999;
+}
+
+.layout-wrapper.layout-sidebar-collapsed .layout-sidebar {
+    width: 70px;
+}
+
+.layout-wrapper.layout-sidebar-collapsed .menu-link {
+    justify-content: center;
+    padding: 0.75rem;
+}
+
+.layout-wrapper.layout-sidebar-collapsed .menu-link i {
+    margin-right: 0;
+    font-size: 1.25rem;
+}
+
+.layout-wrapper.layout-sidebar-collapsed .layout-topbar-logo span {
+    display: none;
+}
+
+.layout-wrapper.layout-sidebar-collapsed .layout-main-container {
+    margin-left: 70px;
+}
+
+.layout-main-container {
+    margin-left: 250px;
+    transition: margin-left 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -148,17 +181,12 @@ const logout = async () => {
         transform: translateX(-100%);
     }
 
-    .layout-wrapper.layout-sidebar-active .layout-sidebar {
+    .layout-wrapper.layout-sidebar-collapsed .layout-sidebar {
         transform: translateX(0);
+        width: 70px;
     }
-}
 
-.layout-wrapper.layout-sidebar-active .layout-main-container {
-    margin-left: 250px;
-}
-
-@media (min-width: 769px) {
-    .layout-sidebar.hidden + .layout-main-container {
+    .layout-main-container {
         margin-left: 0;
     }
 }
