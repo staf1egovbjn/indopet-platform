@@ -29,20 +29,26 @@
                                 <i class="pi pi-image text-2xl text-surface-400"></i>
                             </div>
                             <div class="flex-1">
-                                <h6 class="font-medium text-surface-900 dark:text-surface-0 mb-1">{{ item.name }}</h6>
-                                <p class="text-sm text-surface-600 dark:text-surface-400 mb-2">{{ item.description }}</p>
+                                <h6 class="font-medium text-surface-900 dark:text-surface-0 mb-1">{{ item.product.name }}</h6>
+                                <p class="text-sm text-surface-600 dark:text-surface-400 mb-2">{{ item.product.description }}</p>
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <span class="text-lg font-bold text-primary-600">Rp {{ formatPrice(item.price) }}</span>
+                                        <span class="text-lg font-bold text-primary-600">Rp {{ formatPrice(item.product.price) }}</span>
                                         <div class="flex items-center gap-2">
-                                            <Button icon="pi pi-minus" size="small" severity="secondary" text @click="updateQuantity(item, item.quantity - 1)" :disabled="item.quantity <= 1" />
+                                            <Button icon="pi pi-minus" size="small" severity="secondary" text 
+                                                @click="updateQuantity(item.id, item.quantity - 1)" 
+                                                :disabled="item.quantity <= 1 || loading" />
                                             <span class="px-3 py-1 bg-surface-100 dark:bg-surface-800 rounded">{{ item.quantity }}</span>
-                                            <Button icon="pi pi-plus" size="small" severity="secondary" text @click="updateQuantity(item, item.quantity + 1)" />
+                                            <Button icon="pi pi-plus" size="small" severity="secondary" text 
+                                                @click="updateQuantity(item.id, item.quantity + 1)" 
+                                                :disabled="loading" />
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-lg font-bold">Rp {{ formatPrice(item.price * item.quantity) }}</span>
-                                        <Button icon="pi pi-trash" size="small" severity="danger" text @click="removeItem(item)" />
+                                        <span class="text-lg font-bold">Rp {{ formatPrice(item.product.price * item.quantity) }}</span>
+                                        <Button icon="pi pi-trash" size="small" severity="danger" text 
+                                            @click="confirmRemoveItem(item.id)" 
+                                            :disabled="loading" />
                                     </div>
                                 </div>
                             </div>
@@ -99,10 +105,14 @@ const toast = useToast();
 const confirm = useConfirm();
 const loading = ref(false);
 const cartItems = ref([]);
+const loaded = ref(false);
 
 // Load cart items when component mounts
 onMounted(async () => {
-    await loadCartItems();
+    if (!loaded.value) {
+        await loadCartItems();
+        loaded.value = true;
+    }
 });
 
 // Load cart items from the server
@@ -110,14 +120,19 @@ const loadCartItems = async () => {
     try {
         loading.value = true;
         const response = await CartService.getCartItems();
-        cartItems.value = response.data;
+        if (response.success) {
+            cartItems.value = response.data.items;
+        } else {
+            throw new Error('Failed to load cart items');
+        }
     } catch (error) {
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to load cart items',
+            detail: error.message || 'Failed to load cart items',
             life: 3000
         });
+        cartItems.value = [];
     } finally {
         loading.value = false;
     }
@@ -156,33 +171,39 @@ const updateQuantity = async (item, newQuantity) => {
 };
 
 // Confirm remove item
-const confirmRemoveItem = (item) => {
+const confirmRemoveItem = (itemId) => {
+    const item = cartItems.value.find(i => i.id === itemId);
+    if (!item) return;
+    
     confirm.require({
-        message: `Are you sure you want to remove ${item.name} from your cart?`,
+        message: `Are you sure you want to remove ${item.product.name} from your cart?`,
         header: 'Confirm Removal',
         icon: 'pi pi-exclamation-triangle',
-        accept: () => removeItem(item)
+        accept: () => removeItem(itemId)
     });
 };
 
 // Remove item from cart
-const removeItem = async (item) => {
+const removeItem = async (itemId) => {
     try {
         loading.value = true;
-        await CartService.removeFromCart(item.id);
-        await loadCartItems();
-        
-        toast.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Item removed from cart',
-            life: 3000
-        });
+        const response = await CartService.removeFromCart(itemId);
+        if (response.success) {
+            await loadCartItems();
+            toast.add({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Item removed from cart',
+                life: 3000
+            });
+        } else {
+            throw new Error('Failed to remove item');
+        }
     } catch (error) {
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to remove item',
+            detail: error.message || 'Failed to remove item',
             life: 3000
         });
     } finally {
@@ -254,7 +275,7 @@ const totalItems = computed(() => {
 });
 
 const subtotal = computed(() => {
-    return cartItems.value.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.value.reduce((total, item) => total + (parseFloat(item.product.price) * item.quantity), 0);
 });
 
 const shippingCost = computed(() => {
