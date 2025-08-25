@@ -53,6 +53,14 @@ const router = createRouter({
         {
             path: '/shop',
             component: ShopLayout,
+            beforeEnter: (to, from, next) => {
+                const user = AuthService.getUser();
+                if (user?.role === 'admin') {
+                    next('/admin');
+                } else {
+                    next();
+                }
+            },
             children: [
                 {
                     path: '',

@@ -26,13 +26,21 @@
                             />
                         </template>
                         <template v-else>
-                            <span class="text-surface-600 dark:text-surface-400">Welcome, {{ user?.name }}</span>
+                            <span class="text-surface-600 dark:text-surface-400 mr-2">Welcome, {{ user?.name }}</span>
+                            <Button 
+                                :label="user?.role === 'admin' ? 'Go to Dashboard' : 'Shop Now'"
+                                :icon="user?.role === 'admin' ? 'pi pi-th-large' : 'pi pi-shopping-bag'"
+                                severity="primary"
+                                @click="goToShop"
+                            />
                         </template>
-                        <Button 
-                            label="Shop Now" 
-                            icon="pi pi-shopping-bag" 
-                            @click="goToShop"
-                        />
+                        <template v-if="!isAuthenticated">
+                            <Button 
+                                label="Shop Now" 
+                                icon="pi pi-shopping-bag" 
+                                @click="goToShop"
+                            />
+                        </template>
                     </div>
                 </div>
             </div>
@@ -283,7 +291,15 @@ const goToLogin = () => {
 };
 
 const goToShop = () => {
-    router.push('/shop');
+    if (isAuthenticated.value) {
+        if (user.value?.role === 'admin') {
+            router.push('/admin/products');
+        } else {
+            router.push('/shop');
+        }
+    } else {
+        router.push('/auth/login');
+    }
 };
 
 const goToArticles = () => {
@@ -309,7 +325,10 @@ const loadFeaturedContent = async () => {
 onMounted(async () => {
     if (AuthService.isAuthenticated()) {
         isAuthenticated.value = true;
-        user.value = await AuthService.getCurrentUser();
+        user.value = AuthService.getUser();
+        if (!user.value) {
+            user.value = await AuthService.getCurrentUser();
+        }
     }
     loadFeaturedContent();
 });

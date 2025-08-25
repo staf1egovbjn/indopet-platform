@@ -1,8 +1,9 @@
 <template>
-    <div class="layout-wrapper layout-static">
-        <div class="layout-sidebar">
+    <div class="layout-wrapper" :class="{ 'layout-sidebar-active': isSidebarVisible }">
+        <div class="layout-sidebar" :class="{ 'hidden': !isSidebarVisible }">
             <div class="sidebar-header">
                 <router-link to="/admin" class="layout-topbar-logo">
+                    <i class="pi pi-heart text-xl mr-2"></i>
                     <span>IndoPet Admin</span>
                 </router-link>
             </div>
@@ -57,10 +58,33 @@
                     </button>
                 </div>
                 <div class="layout-topbar-end">
-                    <div class="layout-topbar-menu">
-                        <button class="p-button p-button-text p-button-rounded">
-                            <i class="pi pi-user"></i>
+                    <div class="layout-topbar-menu relative">
+                        <button 
+                            class="p-button p-button-text p-button-rounded flex items-center"
+                            @click="toggleProfileMenu"
+                        >
+                            <i class="pi pi-user mr-2"></i>
+                            <span class="mr-2">{{ user?.name }}</span>
+                            <i class="pi pi-angle-down"></i>
                         </button>
+                        
+                        <!-- Profile Dropdown Menu -->
+                        <div v-show="showProfileMenu" 
+                             class="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-surface-900 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                        >
+                            <a @click="goToProfile"
+                               class="block px-4 py-2 text-sm text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800 cursor-pointer"
+                            >
+                                <i class="pi pi-user mr-2"></i>
+                                Profile
+                            </a>
+                            <a @click="logout"
+                               class="block px-4 py-2 text-sm text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800 cursor-pointer"
+                            >
+                                <i class="pi pi-sign-out mr-2"></i>
+                                Logout
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -73,19 +97,29 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { AuthService } from '@/service/AuthService';
 
 const router = useRouter();
+const isSidebarVisible = ref(true);
+const user = ref(AuthService.getUser());
+const showProfileMenu = ref(false);
 
 const onMenuToggle = () => {
-    // Menu toggle functionality
+    isSidebarVisible.value = !isSidebarVisible.value;
 };
 
-const logout = () => {
-    // Remove auth token
-    localStorage.removeItem('auth_token');
-    
-    // Redirect to login
+const toggleProfileMenu = () => {
+    showProfileMenu.value = !showProfileMenu.value;
+};
+
+const goToProfile = () => {
+    router.push('/admin/profile');
+};
+
+const logout = async () => {
+    await AuthService.logout();
     router.push('/auth/login');
 };
 </script>
@@ -94,6 +128,7 @@ const logout = () => {
 .layout-wrapper {
     display: flex;
     height: 100vh;
+    position: relative;
 }
 
 .layout-sidebar {
@@ -102,6 +137,30 @@ const logout = () => {
     border-right: 1px solid var(--surface-border);
     display: flex;
     flex-direction: column;
+    transition: transform 0.3s, width 0.3s;
+    z-index: 999;
+}
+
+@media (max-width: 768px) {
+    .layout-sidebar {
+        position: fixed;
+        height: 100vh;
+        transform: translateX(-100%);
+    }
+
+    .layout-wrapper.layout-sidebar-active .layout-sidebar {
+        transform: translateX(0);
+    }
+}
+
+.layout-wrapper.layout-sidebar-active .layout-main-container {
+    margin-left: 250px;
+}
+
+@media (min-width: 769px) {
+    .layout-sidebar.hidden + .layout-main-container {
+        margin-left: 0;
+    }
 }
 
 .sidebar-header {
