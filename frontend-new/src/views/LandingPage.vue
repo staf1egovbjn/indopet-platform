@@ -253,7 +253,7 @@ import IndoPetProductService from '@/service/IndoPetProductService.js';
 import IndoPetArticleService from '@/service/IndoPetArticleService.js';
 import Badge from 'primevue/badge';
 import Button from 'primevue/button';
-import { AuthService } from '@/service/AuthService';
+import AuthService  from '@/service/AuthService';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
