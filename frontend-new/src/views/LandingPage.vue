@@ -16,13 +16,18 @@
                         <a href="#contact" class="text-surface-700 dark:text-surface-300 hover:text-primary-600 transition-colors">Contact</a>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <Button 
-                            label="Login" 
-                            icon="pi pi-sign-in" 
-                            severity="secondary" 
-                            outlined
-                            @click="goToLogin"
-                        />
+                        <template v-if="!isAuthenticated">
+                            <Button 
+                                label="Login" 
+                                icon="pi pi-sign-in" 
+                                severity="secondary" 
+                                outlined
+                                @click="goToLogin"
+                            />
+                        </template>
+                        <template v-else>
+                            <span class="text-surface-600 dark:text-surface-400">Welcome, {{ user?.name }}</span>
+                        </template>
                         <Button 
                             label="Shop Now" 
                             icon="pi pi-shopping-bag" 
@@ -248,10 +253,13 @@ import IndoPetProductService from '@/service/IndoPetProductService.js';
 import IndoPetArticleService from '@/service/IndoPetArticleService.js';
 import Badge from 'primevue/badge';
 import Button from 'primevue/button';
-import { onMounted, ref } from 'vue';
+import { AuthService } from '@/service/AuthService';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const isAuthenticated = ref(false);
+const user = ref(null);
 
 // Data
 const featuredProducts = ref([]);
@@ -298,7 +306,11 @@ const loadFeaturedContent = async () => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
+    if (AuthService.isAuthenticated()) {
+        isAuthenticated.value = true;
+        user.value = await AuthService.getCurrentUser();
+    }
     loadFeaturedContent();
 });
 </script>
