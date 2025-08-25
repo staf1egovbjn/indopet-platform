@@ -1,8 +1,28 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
 import AppConfigurator from './AppConfigurator.vue';
+import { ref, onMounted } from 'vue';
+import { AuthService } from '@/service/AuthService';
+import { useRouter } from 'vue-router';
 
 const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
+const router = useRouter();
+const isAuthenticated = ref(false);
+const user = ref(null);
+
+onMounted(async () => {
+    if (AuthService.isAuthenticated()) {
+        isAuthenticated.value = true;
+        user.value = await AuthService.getCurrentUser();
+    }
+});
+
+const handleLogout = async () => {
+    await AuthService.logout();
+    isAuthenticated.value = false;
+    user.value = null;
+    router.push('/auth/login');
+};
 </script>
 
 <template>
@@ -60,14 +80,30 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
-                    <button type="button" class="layout-topbar-action" @click="$router.push('/cart')">
-                        <i class="pi pi-shopping-cart"></i>
-                        <span>Cart</span>
-                    </button>
-                    <button type="button" class="layout-topbar-action" @click="$router.push('/profile')">
-                        <i class="pi pi-user"></i>
-                        <span>Profile</span>
-                    </button>
+                    <template v-if="isAuthenticated">
+                        <button type="button" class="layout-topbar-action" @click="$router.push('/cart')">
+                            <i class="pi pi-shopping-cart"></i>
+                            <span>Cart</span>
+                        </button>
+                        <button type="button" class="layout-topbar-action" @click="$router.push('/profile')">
+                            <i class="pi pi-user"></i>
+                            <span>{{ user?.name || 'Profile' }}</span>
+                        </button>
+                        <button type="button" class="layout-topbar-action" @click="handleLogout">
+                            <i class="pi pi-sign-out"></i>
+                            <span>Logout</span>
+                        </button>
+                    </template>
+                    <template v-else>
+                        <button type="button" class="layout-topbar-action" @click="$router.push('/auth/login')">
+                            <i class="pi pi-sign-in"></i>
+                            <span>Login</span>
+                        </button>
+                        <button type="button" class="layout-topbar-action" @click="$router.push('/auth/register')">
+                            <i class="pi pi-user-plus"></i>
+                            <span>Register</span>
+                        </button>
+                    </template>
                 </div>
             </div>
         </div>
