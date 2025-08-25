@@ -1,4 +1,4 @@
-    import AdminLayout from '@/layout/AdminLayout.vue';
+import AdminLayout from '@/layout/AdminLayout.vue';
 import ShopLayout from '@/layout/ShopLayout.vue';
 import AuthService from '@/service/AuthService.js';
 import { createRouter, createWebHistory } from 'vue-router';

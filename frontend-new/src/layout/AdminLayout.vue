@@ -99,7 +99,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { AuthService } from '@/service/AuthService';
+import AuthService from '@/service/AuthService';
 
 const router = useRouter();
 const isSidebarVisible = ref(true);
